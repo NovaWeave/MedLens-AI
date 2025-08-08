@@ -1,0 +1,42 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:15
+    container_name: medlens_db
+    environment:
+      POSTGRES_USER: medlens
+      POSTGRES_PASSWORD: medlens
+      POSTGRES_DB: medlens
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: medlens_backend
+    environment:
+      DATABASE_URL: postgresql+psycopg2://medlens:medlens@db:5432/medlens
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build: ./frontend
+    container_name: medlens_frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm ci || npm install && npm run dev -- --host"
+
+volumes:
+  pgdata:
+
+
